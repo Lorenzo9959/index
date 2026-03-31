@@ -113,7 +113,7 @@
     /* ── KPI cards ── */
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 12px;
       margin-bottom: 20px;
     }
@@ -124,6 +124,9 @@
       padding: 16px;
       position: relative;
       overflow: hidden;
+      display: flex;
+      gap: 14px;
+      align-items: center;
     }
     .kpi-card::after {
       content: '';
@@ -135,20 +138,73 @@
     .kpi-card.distrib::after  { background: #188918; }
     .kpi-card.shelf::after    { background: #e76500; }
     .kpi-card.sales::after    { background: #6a00a8; }
-    .kpi-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--sap-text-sub); margin-bottom: 8px; }
-    .kpi-row   { display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px; }
-    .kpi-actual { font-size: 28px; font-weight: 700; color: var(--sap-text); }
-    .kpi-of     { font-size: 13px; color: var(--sap-text-light); }
-    .kpi-pct    { font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+    .kpi-info { flex: 1; min-width: 0; }
+    .kpi-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--sap-text-sub); margin-bottom: 6px; }
+    .kpi-row   { display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; }
+    .kpi-actual { font-size: 26px; font-weight: 700; color: var(--sap-text); }
+    .kpi-of     { font-size: 12px; color: var(--sap-text-light); }
+    .kpi-pct    { font-size: 12px; font-weight: 600; margin-bottom: 6px; }
     .kpi-pct.good { color: var(--sap-success); }
     .kpi-pct.warn { color: var(--sap-warning); }
     .kpi-pct.bad  { color: var(--sap-error); }
-    .prog-bar  { height: 5px; background: #e5e5e5; border-radius: 99px; overflow: hidden; }
-    .prog-fill { height: 100%; border-radius: 99px; transition: width .4s; }
+    .kpi-gap { font-size: 11px; color: var(--sap-text-sub); }
+    .kpi-gap span { font-weight: 700; }
+    .kpi-gap.gap-done span { color: var(--sap-success); }
+    .kpi-gap.gap-left span { color: var(--sap-error); }
+    .prog-bar  { height: 5px; background: #e5e5e5; border-radius: 99px; overflow: hidden; margin-top: 6px; }
+    .prog-fill { height: 100%; border-radius: 99px; transition: width .6s ease; }
     .kpi-card.visits .prog-fill  { background: #0070f2; }
     .kpi-card.distrib .prog-fill { background: #188918; }
     .kpi-card.shelf .prog-fill   { background: #e76500; }
     .kpi-card.sales .prog-fill   { background: #6a00a8; }
+
+    /* ── Donut chart ── */
+    .donut-wrap { flex-shrink: 0; position: relative; width: 72px; height: 72px; }
+    .donut-wrap svg { transform: rotate(-90deg); }
+    .donut-bg   { fill: none; stroke: #e8e8e8; stroke-width: 7; }
+    .donut-fill { fill: none; stroke-width: 7; stroke-linecap: round; transition: stroke-dashoffset .6s ease; }
+    .donut-text {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: var(--sap-text);
+      line-height: 1;
+    }
+    .donut-text small { font-size: 9px; font-weight: 400; color: var(--sap-text-sub); margin-top: 2px; }
+
+    /* ── Bar chart ── */
+    .bar-chart { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .bar-row { display: flex; flex-direction: column; gap: 4px; }
+    .bar-meta { display: flex; justify-content: space-between; align-items: baseline; }
+    .bar-name { font-size: 12px; font-weight: 600; color: var(--sap-text); }
+    .bar-nums { font-size: 11px; color: var(--sap-text-sub); }
+    .bar-track { height: 20px; background: #f0f0f0; border-radius: 4px; overflow: hidden; position: relative; }
+    .bar-actual {
+      height: 100%; border-radius: 4px;
+      display: flex; align-items: center; justify-content: flex-end;
+      padding-right: 6px;
+      font-size: 10px; font-weight: 700; color: #fff;
+      transition: width .6s ease;
+      min-width: 28px;
+    }
+    .bar-target-line {
+      position: absolute; top: 0; bottom: 0;
+      width: 2px; background: rgba(0,0,0,.25);
+    }
+
+    /* ── Gap table ── */
+    .gap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; padding: 16px; }
+    .gap-item {
+      border: 1px solid var(--sap-border);
+      border-radius: 6px;
+      padding: 12px 14px;
+      background: #fafafa;
+    }
+    .gap-item.achieved { border-color: #b7dfb7; background: #f2fbf2; }
+    .gap-item-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: var(--sap-text-sub); margin-bottom: 6px; }
+    .gap-item-val { font-size: 20px; font-weight: 700; color: var(--sap-error); }
+    .gap-item.achieved .gap-item-val { color: var(--sap-success); }
+    .gap-item-sub { font-size: 11px; color: var(--sap-text-sub); margin-top: 3px; }
 
     /* ── Panel card ── */
     .panel {
@@ -165,7 +221,22 @@
       color: var(--sap-text);
       background: #f8f8f8;
       border-bottom: 1px solid var(--sap-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
+    .btn-clear {
+      font-size: 11px;
+      font-family: inherit;
+      padding: 3px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--sap-error);
+      background: transparent;
+      color: var(--sap-error);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-clear:hover { background: #fff0f0; }
     .panel-body { padding: 16px; }
 
     /* ── Form ── */
@@ -251,7 +322,16 @@
 <div id="root"></div>
 
 <script type="text/babel">
-const { useState, useEffect } = React;
+const { useState, useEffect, useRef } = React;
+
+// ── localStorage persistence ──────────────────────────────────────────────────
+const load = (key, fallback) => {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch { return fallback; }
+};
+const save = (key, value) => {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+};
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const pct     = (a, t) => t > 0 ? Math.min(Math.round((a / t) * 100), 999) : 0;
@@ -278,20 +358,102 @@ function getSapContext() {
 const INIT_TARGETS = { visits: 80, distribution: 150, shelfFacings: 300, sales: 50000 };
 const INIT_ACTUAL  = { visits: 0, distribution: 0, shelfFacings: 0, sales: 0 };
 
+// ── Donut Chart ───────────────────────────────────────────────────────────────
+function Donut({ pctVal, color }) {
+  const r = 28, circ = 2 * Math.PI * r;
+  const offset = circ * (1 - Math.min(pctVal, 100) / 100);
+  return (
+    <div className="donut-wrap">
+      <svg width="72" height="72" viewBox="0 0 72 72">
+        <circle className="donut-bg" cx="36" cy="36" r={r} />
+        <circle className="donut-fill" cx="36" cy="36" r={r}
+          stroke={color}
+          strokeDasharray={circ}
+          strokeDashoffset={offset} />
+      </svg>
+      <div className="donut-text">
+        {pctVal}<small>%</small>
+      </div>
+    </div>
+  );
+}
+
 // ── KPI Card ─────────────────────────────────────────────────────────────────
-function KpiCard({ cls, label, actual, target, prefix }) {
-  const p = pct(actual, target);
+function KpiCard({ cls, label, actual, target, prefix, color }) {
+  const p   = pct(actual, target);
+  const gap = Math.max(target - actual, 0);
+  const done = actual >= target;
   return (
     <div className={`kpi-card ${cls}`}>
-      <div className="kpi-label">{label}</div>
-      <div className="kpi-row">
-        <span className="kpi-actual">{prefix}{actual.toLocaleString()}</span>
-        <span className="kpi-of">/ {prefix}{target.toLocaleString()}</span>
+      <div className="kpi-info">
+        <div className="kpi-label">{label}</div>
+        <div className="kpi-row">
+          <span className="kpi-actual">{prefix}{actual.toLocaleString()}</span>
+          <span className="kpi-of">/ {prefix}{target.toLocaleString()}</span>
+        </div>
+        <div className={`kpi-pct ${pctCls(p)}`}>{p}% of target</div>
+        <div className={`kpi-gap ${done ? 'gap-done' : 'gap-left'}`}>
+          {done
+            ? <><span>✓ Target achieved</span></>
+            : <>Gap: <span>{prefix}{gap.toLocaleString()}</span> remaining</>
+          }
+        </div>
+        <div className="prog-bar">
+          <div className="prog-fill" style={{ width: `${Math.min(p, 100)}%` }} />
+        </div>
       </div>
-      <div className={`kpi-pct ${pctCls(p)}`}>{p}% of target</div>
-      <div className="prog-bar">
-        <div className="prog-fill" style={{ width: `${Math.min(p, 100)}%` }} />
-      </div>
+      <Donut pctVal={p} color={color} />
+    </div>
+  );
+}
+
+// ── Bar Chart ─────────────────────────────────────────────────────────────────
+function BarChart({ cards }) {
+  return (
+    <div className="bar-chart">
+      {cards.map(c => {
+        const p = pct(c.actual, c.target);
+        const w = Math.min(p, 100);
+        return (
+          <div className="bar-row" key={c.cls}>
+            <div className="bar-meta">
+              <span className="bar-name">{c.label}</span>
+              <span className="bar-nums">
+                {c.prefix}{c.actual.toLocaleString()} &nbsp;/&nbsp; {c.prefix}{c.target.toLocaleString()}
+              </span>
+            </div>
+            <div className="bar-track">
+              <div className="bar-actual" style={{ width: `${w}%`, background: c.color }}>
+                {w > 15 && `${p}%`}
+              </div>
+              <div className="bar-target-line" style={{ left: '100%', display: p >= 100 ? 'none' : 'block' }} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Gap to Target Panel ───────────────────────────────────────────────────────
+function GapPanel({ cards }) {
+  return (
+    <div className="gap-grid">
+      {cards.map(c => {
+        const gap  = Math.max(c.target - c.actual, 0);
+        const done = c.actual >= c.target;
+        return (
+          <div className={`gap-item ${done ? 'achieved' : ''}`} key={c.cls}>
+            <div className="gap-item-label">{c.label}</div>
+            <div className="gap-item-val">
+              {done ? '✓ Done' : `${c.prefix}${gap.toLocaleString()}`}
+            </div>
+            <div className="gap-item-sub">
+              {done ? `Exceeded by ${c.prefix}${(c.actual - c.target).toLocaleString()}` : 'still needed to hit target'}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -299,10 +461,10 @@ function KpiCard({ cls, label, actual, target, prefix }) {
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 function Dashboard({ targets, actual, log, sapCtx }) {
   const cards = [
-    { cls: 'visits',  label: 'Store Visits',   actual: actual.visits,       target: targets.visits,       prefix: ''  },
-    { cls: 'distrib', label: 'Distribution',   actual: actual.distribution, target: targets.distribution, prefix: ''  },
-    { cls: 'shelf',   label: 'Shelf Facings',  actual: actual.shelfFacings, target: targets.shelfFacings, prefix: ''  },
-    { cls: 'sales',   label: 'Sales Revenue',  actual: actual.sales,        target: targets.sales,        prefix: '$' },
+    { cls: 'visits',  label: 'Store Visits',  actual: actual.visits,       target: targets.visits,       prefix: '',  color: '#0070f2' },
+    { cls: 'distrib', label: 'Distribution',  actual: actual.distribution, target: targets.distribution, prefix: '',  color: '#188918' },
+    { cls: 'shelf',   label: 'Shelf Facings', actual: actual.shelfFacings, target: targets.shelfFacings, prefix: '',  color: '#e76500' },
+    { cls: 'sales',   label: 'Sales Revenue', actual: actual.sales,        target: targets.sales,        prefix: '$', color: '#6a00a8' },
   ];
   const overallPct = Math.round(cards.reduce((s, c) => s + pct(c.actual, c.target), 0) / cards.length);
 
@@ -344,10 +506,24 @@ function Dashboard({ targets, actual, log, sapCtx }) {
         </div>
       </div>
 
+      {/* KPI cards with donut charts */}
       <div className="kpi-grid">
         {cards.map(c => <KpiCard key={c.cls} {...c} />)}
       </div>
 
+      {/* Actual vs Target bar chart */}
+      <div className="panel">
+        <div className="panel-header">Actual vs Target</div>
+        <BarChart cards={cards} />
+      </div>
+
+      {/* Gap to target */}
+      <div className="panel">
+        <div className="panel-header">Gap to Target</div>
+        <GapPanel cards={cards} />
+      </div>
+
+      {/* Recent activity */}
       <div className="panel">
         <div className="panel-header">Recent Activity</div>
         <div className="table-wrap">
@@ -494,7 +670,16 @@ function LogActivity({ log, setLog, setActual, sapCtx }) {
       </div>
 
       <div className="panel">
-        <div className="panel-header">Activity Log ({log.length} entries)</div>
+        <div className="panel-header">Activity Log ({log.length} entries)
+          {log.length > 0 && (
+            <button className="btn-clear" onClick={() => {
+              if (window.confirm('Clear all activity history and reset actuals?')) {
+                setLog([]);
+                setActual(INIT_ACTUAL);
+              }
+            }}>Clear History</button>
+          )}
+        </div>
         <div className="table-wrap">
           {log.length === 0 ? (
             <div className="empty">No activities logged yet.</div>
@@ -591,10 +776,15 @@ function SetTargets({ targets, setTargets }) {
 // ── App root ──────────────────────────────────────────────────────────────────
 function App() {
   const [tab,     setTab]     = useState('dashboard');
-  const [targets, setTargets] = useState(INIT_TARGETS);
-  const [actual,  setActual]  = useState(INIT_ACTUAL);
-  const [log,     setLog]     = useState([]);
+  const [targets, setTargets] = useState(() => load('rex_targets', INIT_TARGETS));
+  const [actual,  setActual]  = useState(() => load('rex_actual',  INIT_ACTUAL));
+  const [log,     setLog]     = useState(() => load('rex_log',     []));
   const [sapCtx,  setSapCtx]  = useState(getSapContext());
+
+  // Persist to localStorage on every change
+  useEffect(() => save('rex_targets', targets), [targets]);
+  useEffect(() => save('rex_actual',  actual),  [actual]);
+  useEffect(() => save('rex_log',     log),     [log]);
 
   // Listen for SAP mashup postMessage context updates
   useEffect(() => {
