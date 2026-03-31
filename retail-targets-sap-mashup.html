@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<!--
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║  Retail Execution Targets — SAP HTML Mashup                     ║
+  ║                                                                  ║
+  ║  HOW TO INSTALL IN SAP SALES & SERVICE CLOUD V2:                ║
+  ║  1. Log in as Administrator                                      ║
+  ║  2. Go to: Settings → Adaptation → HTML Mashups                 ║
+  ║     (or: Administrator → Mashup Authoring)                      ║
+  ║  3. Click "New" → choose "HTML Mashup"                          ║
+  ║  4. Paste the full contents of this file into the HTML editor   ║
+  ║  5. Give it the name "Retail Execution Targets"                 ║
+  ║  6. Set Port Binding if you want to receive account context     ║
+  ║  7. Save & Activate, then embed on any screen via Page Layout   ║
+  ╚══════════════════════════════════════════════════════════════════╝
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Retail Execution Targets</title>
+
+  <!-- React via CDN (works inside SAP mashup iframe) -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── SAP Horizon design tokens ── */
+    :root {
+      --sap-shell:       #1b6498;
+      --sap-accent:      #0070f2;
+      --sap-accent-hover:#0064d9;
+      --sap-success:     #188918;
+      --sap-warning:     #e76500;
+      --sap-error:       #bb0000;
+      --sap-bg:          #f5f6f7;
+      --sap-surface:     #ffffff;
+      --sap-border:      #d9d9d9;
+      --sap-text:        #32363a;
+      --sap-text-sub:    #6a6d70;
+      --sap-text-light:  #a9abac;
+      --sap-radius:      8px;
+      --sap-shadow:      0 2px 6px rgba(0,0,0,.10);
+    }
+
+    body {
+      font-family: '72', '72full', Arial, Helvetica, sans-serif;
+      font-size: 14px;
+      background: var(--sap-bg);
+      color: var(--sap-text);
+      min-height: 100vh;
+    }
+
+    /* ── Top tab bar (SAP-style icon strip) ── */
+    .tab-bar {
+      background: var(--sap-surface);
+      border-bottom: 1px solid var(--sap-border);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 4px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .tab-bar-brand {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--sap-shell);
+      margin-right: 16px;
+      padding: 12px 0;
+      white-space: nowrap;
+    }
+    .tab-bar-brand span { color: var(--sap-accent); }
+    .tab-btn {
+      padding: 10px 16px;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--sap-text-sub);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--sap-text); }
+    .tab-btn.active { color: var(--sap-accent); border-bottom-color: var(--sap-accent); font-weight: 600; }
+    .tab-spacer { flex: 1; }
+    .tab-period { font-size: 12px; color: var(--sap-text-sub); padding: 0 8px; }
+
+    /* ── Layout ── */
+    .page { padding: 20px 16px; max-width: 1080px; margin: 0 auto; }
+    .page-title { font-size: 18px; font-weight: 700; color: var(--sap-text); margin-bottom: 16px; }
+
+    /* ── Summary strip ── */
+    .summary-strip {
+      display: flex; gap: 12px; flex-wrap: wrap;
+      background: var(--sap-shell);
+      border-radius: var(--sap-radius);
+      padding: 14px 18px;
+      margin-bottom: 20px;
+    }
+    .ssum { flex: 1; min-width: 110px; }
+    .ssum-label { font-size: 10px; text-transform: uppercase; letter-spacing: .6px; color: #afd4ed; margin-bottom: 3px; }
+    .ssum-val   { font-size: 22px; font-weight: 700; color: #fff; line-height: 1; }
+    .ssum-sub   { font-size: 11px; color: #afd4ed; margin-top: 2px; }
+
+    /* ── KPI cards ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .kpi-card {
+      background: var(--sap-surface);
+      border-radius: var(--sap-radius);
+      border: 1px solid var(--sap-border);
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .kpi-card.visits::after   { background: #0070f2; }
+    .kpi-card.distrib::after  { background: #188918; }
+    .kpi-card.shelf::after    { background: #e76500; }
+    .kpi-card.sales::after    { background: #6a00a8; }
+    .kpi-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--sap-text-sub); margin-bottom: 8px; }
+    .kpi-row   { display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px; }
+    .kpi-actual { font-size: 28px; font-weight: 700; color: var(--sap-text); }
+    .kpi-of     { font-size: 13px; color: var(--sap-text-light); }
+    .kpi-pct    { font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+    .kpi-pct.good { color: var(--sap-success); }
+    .kpi-pct.warn { color: var(--sap-warning); }
+    .kpi-pct.bad  { color: var(--sap-error); }
+    .prog-bar  { height: 5px; background: #e5e5e5; border-radius: 99px; overflow: hidden; }
+    .prog-fill { height: 100%; border-radius: 99px; transition: width .4s; }
+    .kpi-card.visits .prog-fill  { background: #0070f2; }
+    .kpi-card.distrib .prog-fill { background: #188918; }
+    .kpi-card.shelf .prog-fill   { background: #e76500; }
+    .kpi-card.sales .prog-fill   { background: #6a00a8; }
+
+    /* ── Panel card ── */
+    .panel {
+      background: var(--sap-surface);
+      border: 1px solid var(--sap-border);
+      border-radius: var(--sap-radius);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--sap-text);
+      background: #f8f8f8;
+      border-bottom: 1px solid var(--sap-border);
+    }
+    .panel-body { padding: 16px; }
+
+    /* ── Form ── */
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 11px; font-weight: 600; color: var(--sap-text-sub); text-transform: uppercase; letter-spacing: .4px; }
+    .field input, .field select {
+      padding: 7px 10px;
+      border: 1px solid var(--sap-border);
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--sap-text);
+      background: #fff;
+      transition: border-color .15s, box-shadow .15s;
+      outline: none;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--sap-accent);
+      box-shadow: 0 0 0 2px rgba(0,112,242,.15);
+    }
+    .btn-row { display: flex; gap: 8px; margin-top: 14px; align-items: center; }
+
+    /* ── SAP-style buttons ── */
+    .btn {
+      padding: 8px 18px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background .15s, border-color .15s;
+    }
+    .btn-emphasized { background: var(--sap-accent); color: #fff; border-color: var(--sap-accent); }
+    .btn-emphasized:hover { background: var(--sap-accent-hover); border-color: var(--sap-accent-hover); }
+    .btn-positive { background: var(--sap-success); color: #fff; border-color: var(--sap-success); }
+    .btn-positive:hover { opacity: .88; }
+    .msg-ok  { font-size: 12px; color: var(--sap-success); font-weight: 600; }
+    .msg-err { font-size: 12px; color: var(--sap-error);   font-weight: 600; }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead tr { background: #f0f0f0; }
+    th { padding: 9px 12px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--sap-text-sub); border-bottom: 1px solid var(--sap-border); }
+    td { padding: 9px 12px; border-bottom: 1px solid #f0f0f0; color: var(--sap-text); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f5f9ff; }
+
+    /* ── Badges ── */
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .badge-info    { background: #e8f4fd; color: #0a6a9c; }
+    .badge-success { background: #e3f1e3; color: #1a6e1a; }
+    .badge-warning { background: #fef0e0; color: #9e4300; }
+
+    .empty { text-align: center; padding: 32px; color: var(--sap-text-light); font-size: 13px; }
+
+    /* ── SAP context banner ── */
+    .ctx-banner {
+      background: #e8f4fd;
+      border: 1px solid #bad3e8;
+      border-radius: 4px;
+      padding: 8px 14px;
+      font-size: 12px;
+      color: #0a6a9c;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ctx-banner strong { font-weight: 700; }
+    .ctx-dot { width: 8px; height: 8px; border-radius: 50%; background: #0070f2; flex-shrink: 0; }
+
+    @media (max-width: 560px) {
+      .tab-bar-brand { display: none; }
+      .kpi-actual { font-size: 22px; }
+      .ssum-val   { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const pct     = (a, t) => t > 0 ? Math.min(Math.round((a / t) * 100), 999) : 0;
+const pctCls  = v => v >= 100 ? 'good' : v >= 70 ? 'warn' : 'bad';
+const today   = () => new Date().toISOString().slice(0, 10);
+const MONTHS  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const nowMonth = () => { const d = new Date(); return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`; };
+
+// ── SAP Mashup context receiver ───────────────────────────────────────────────
+// SAP passes context (e.g. current Account name) via postMessage or URL params.
+// We read both so the mashup works whether hosted standalone or inside SAP.
+function getSapContext() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      accountName: params.get('AccountName') || params.get('accountName') || '',
+      accountId:   params.get('AccountID')   || params.get('accountId')   || '',
+      repName:     params.get('RepName')      || params.get('repName')     || '',
+    };
+  } catch { return {}; }
+}
+
+// ── Initial state ─────────────────────────────────────────────────────────────
+const INIT_TARGETS = { visits: 80, distribution: 150, shelfFacings: 300, sales: 50000 };
+const INIT_ACTUAL  = { visits: 0, distribution: 0, shelfFacings: 0, sales: 0 };
+
+// ── KPI Card ─────────────────────────────────────────────────────────────────
+function KpiCard({ cls, label, actual, target, prefix }) {
+  const p = pct(actual, target);
+  return (
+    <div className={`kpi-card ${cls}`}>
+      <div className="kpi-label">{label}</div>
+      <div className="kpi-row">
+        <span className="kpi-actual">{prefix}{actual.toLocaleString()}</span>
+        <span className="kpi-of">/ {prefix}{target.toLocaleString()}</span>
+      </div>
+      <div className={`kpi-pct ${pctCls(p)}`}>{p}% of target</div>
+      <div className="prog-bar">
+        <div className="prog-fill" style={{ width: `${Math.min(p, 100)}%` }} />
+      </div>
+    </div>
+  );
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+function Dashboard({ targets, actual, log, sapCtx }) {
+  const cards = [
+    { cls: 'visits',  label: 'Store Visits',   actual: actual.visits,       target: targets.visits,       prefix: ''  },
+    { cls: 'distrib', label: 'Distribution',   actual: actual.distribution, target: targets.distribution, prefix: ''  },
+    { cls: 'shelf',   label: 'Shelf Facings',  actual: actual.shelfFacings, target: targets.shelfFacings, prefix: ''  },
+    { cls: 'sales',   label: 'Sales Revenue',  actual: actual.sales,        target: targets.sales,        prefix: '$' },
+  ];
+  const overallPct = Math.round(cards.reduce((s, c) => s + pct(c.actual, c.target), 0) / cards.length);
+
+  return (
+    <div className="page">
+      <div className="page-title">Dashboard — {nowMonth()}</div>
+
+      {(sapCtx.accountName || sapCtx.repName) && (
+        <div className="ctx-banner">
+          <div className="ctx-dot" />
+          <span>
+            {sapCtx.repName && <><strong>Rep:</strong> {sapCtx.repName}&nbsp;&nbsp;</>}
+            {sapCtx.accountName && <><strong>Account:</strong> {sapCtx.accountName}</>}
+            &nbsp;— context received from SAP
+          </span>
+        </div>
+      )}
+
+      <div className="summary-strip">
+        <div className="ssum">
+          <div className="ssum-label">Overall Attainment</div>
+          <div className="ssum-val">{overallPct}%</div>
+          <div className="ssum-sub">avg across all KPIs</div>
+        </div>
+        <div className="ssum">
+          <div className="ssum-label">Activities Logged</div>
+          <div className="ssum-val">{log.length}</div>
+          <div className="ssum-sub">this period</div>
+        </div>
+        <div className="ssum">
+          <div className="ssum-label">Stores Covered</div>
+          <div className="ssum-val">{new Set(log.map(e => e.store)).size}</div>
+          <div className="ssum-sub">unique stores</div>
+        </div>
+        <div className="ssum">
+          <div className="ssum-label">Revenue</div>
+          <div className="ssum-val">${actual.sales.toLocaleString()}</div>
+          <div className="ssum-sub">of ${targets.sales.toLocaleString()}</div>
+        </div>
+      </div>
+
+      <div className="kpi-grid">
+        {cards.map(c => <KpiCard key={c.cls} {...c} />)}
+      </div>
+
+      <div className="panel">
+        <div className="panel-header">Recent Activity</div>
+        <div className="table-wrap">
+          {log.length === 0 ? (
+            <div className="empty">No activities yet — go to Log Activity to add entries.</div>
+          ) : (
+            <table>
+              <thead><tr>
+                <th>Date</th><th>Store</th><th>Visits</th>
+                <th>Listings</th><th>Facings</th><th>Sales ($)</th><th>Status</th>
+              </tr></thead>
+              <tbody>
+                {log.slice(0, 8).map(e => (
+                  <tr key={e.id}>
+                    <td>{e.date}</td>
+                    <td><strong>{e.store}</strong></td>
+                    <td>{e.visits}</td>
+                    <td>{e.distribution}</td>
+                    <td>{e.shelfFacings}</td>
+                    <td>${e.sales.toLocaleString()}</td>
+                    <td><span className={`badge ${e.sales > 0 ? 'badge-success' : 'badge-warning'}`}>
+                      {e.sales > 0 ? 'With Revenue' : 'No Sale'}
+                    </span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Log Activity ──────────────────────────────────────────────────────────────
+function LogActivity({ log, setLog, setActual, sapCtx }) {
+  const [form, setForm] = useState({
+    date: today(), store: sapCtx.accountName || '', type: 'visits',
+    visits: 1, distribution: 0, shelfFacings: 0, sales: 0, notes: ''
+  });
+  const [msg, setMsg] = useState('');
+
+  // If SAP context changes (user navigates to a new account), pre-fill store name
+  useEffect(() => {
+    if (sapCtx.accountName) setForm(p => ({ ...p, store: sapCtx.accountName }));
+  }, [sapCtx.accountName]);
+
+  const actTypes = [
+    { v: 'visits',       l: 'Store Visit'        },
+    { v: 'distribution', l: 'Distribution Check' },
+    { v: 'shelfFacings', l: 'Shelf Audit'         },
+    { v: 'sales',        l: 'Sales Order'         },
+    { v: 'mixed',        l: 'Mixed Activity'      },
+  ];
+
+  const submit = () => {
+    if (!form.store.trim()) { setMsg('Store name is required.'); return; }
+    if (isNaN(form.sales) || Number(form.sales) < 0) { setMsg('Sales must be 0 or more.'); return; }
+    const entry = {
+      id: Date.now(),
+      date:         form.date,
+      store:        form.store.trim(),
+      type:         form.type,
+      visits:       Number(form.visits),
+      distribution: Number(form.distribution),
+      shelfFacings: Number(form.shelfFacings),
+      sales:        Number(form.sales),
+      notes:        form.notes.trim(),
+    };
+    setLog(prev => [entry, ...prev]);
+    setActual(prev => ({
+      visits:       prev.visits       + entry.visits,
+      distribution: prev.distribution + entry.distribution,
+      shelfFacings: prev.shelfFacings + entry.shelfFacings,
+      sales:        prev.sales        + entry.sales,
+    }));
+    setForm(prev => ({ ...prev, store: sapCtx.accountName || '', visits: 1, distribution: 0, shelfFacings: 0, sales: 0, notes: '' }));
+    setMsg('Activity logged!');
+    setTimeout(() => setMsg(''), 2200);
+  };
+
+  return (
+    <div className="page">
+      <div className="page-title">Log Activity</div>
+
+      {sapCtx.accountName && (
+        <div className="ctx-banner">
+          <div className="ctx-dot" />
+          <span>SAP context: store pre-filled from <strong>{sapCtx.accountName}</strong></span>
+        </div>
+      )}
+
+      <div className="panel">
+        <div className="panel-header">New Entry</div>
+        <div className="panel-body">
+          <div className="form-grid">
+            <div className="field">
+              <label>Date</label>
+              <input type="date" value={form.date}
+                onChange={e => setForm(p => ({ ...p, date: e.target.value }))} />
+            </div>
+            <div className="field">
+              <label>Store / Account Name</label>
+              <input type="text" placeholder="e.g. Walmart #402" value={form.store}
+                onChange={e => setForm(p => ({ ...p, store: e.target.value }))} />
+            </div>
+            <div className="field">
+              <label>Activity Type</label>
+              <select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}>
+                {actTypes.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label>Visits Counted</label>
+              <input type="number" min="0" value={form.visits}
+                onChange={e => setForm(p => ({ ...p, visits: e.target.value }))} />
+            </div>
+            <div className="field">
+              <label>Listings Added</label>
+              <input type="number" min="0" value={form.distribution}
+                onChange={e => setForm(p => ({ ...p, distribution: e.target.value }))} />
+            </div>
+            <div className="field">
+              <label>Facings Added</label>
+              <input type="number" min="0" value={form.shelfFacings}
+                onChange={e => setForm(p => ({ ...p, shelfFacings: e.target.value }))} />
+            </div>
+            <div className="field">
+              <label>Sales ($)</label>
+              <input type="number" min="0" step="0.01" value={form.sales}
+                onChange={e => setForm(p => ({ ...p, sales: e.target.value }))} />
+            </div>
+            <div className="field">
+              <label>Notes</label>
+              <input type="text" placeholder="Optional" value={form.notes}
+                onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
+            </div>
+          </div>
+          <div className="btn-row">
+            <button className="btn btn-positive" onClick={submit}>Log Activity</button>
+            {msg && <span className={msg === 'Activity logged!' ? 'msg-ok' : 'msg-err'}>{msg}</span>}
+          </div>
+        </div>
+      </div>
+
+      <div className="panel">
+        <div className="panel-header">Activity Log ({log.length} entries)</div>
+        <div className="table-wrap">
+          {log.length === 0 ? (
+            <div className="empty">No activities logged yet.</div>
+          ) : (
+            <table>
+              <thead><tr>
+                <th>Date</th><th>Store</th><th>Type</th>
+                <th>Visits</th><th>Listings</th><th>Facings</th><th>Sales</th><th>Notes</th>
+              </tr></thead>
+              <tbody>
+                {log.map(e => (
+                  <tr key={e.id}>
+                    <td>{e.date}</td>
+                    <td><strong>{e.store}</strong></td>
+                    <td><span className="badge badge-info">{e.type}</span></td>
+                    <td>{e.visits}</td>
+                    <td>{e.distribution}</td>
+                    <td>{e.shelfFacings}</td>
+                    <td>${e.sales.toLocaleString()}</td>
+                    <td style={{ color: '#a9abac' }}>{e.notes || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Set Targets ───────────────────────────────────────────────────────────────
+function SetTargets({ targets, setTargets }) {
+  const [form, setForm] = useState({ ...targets });
+  const [msg,  setMsg]  = useState('');
+
+  const fields = [
+    { key: 'visits',       label: 'Monthly Store Visits Target',    prefix: ''  },
+    { key: 'distribution', label: 'Distribution / Listings Target', prefix: ''  },
+    { key: 'shelfFacings', label: 'Shelf Facings Target',           prefix: ''  },
+    { key: 'sales',        label: 'Sales Revenue Target ($)',       prefix: '$' },
+  ];
+
+  const save = () => {
+    for (const k of Object.keys(form)) {
+      if (isNaN(form[k]) || Number(form[k]) <= 0) { setMsg('All targets must be positive numbers.'); return; }
+    }
+    setTargets(Object.fromEntries(Object.entries(form).map(([k, v]) => [k, Number(v)])));
+    setMsg('Targets saved!');
+    setTimeout(() => setMsg(''), 2500);
+  };
+
+  return (
+    <div className="page">
+      <div className="page-title">Set Monthly Targets</div>
+      <div className="panel">
+        <div className="panel-header">Period: {nowMonth()}</div>
+        <div className="panel-body">
+          <div className="form-grid">
+            {fields.map(f => (
+              <div className="field" key={f.key}>
+                <label>{f.label}</label>
+                <input type="number" min="1"
+                  value={form[f.key]}
+                  onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))} />
+              </div>
+            ))}
+          </div>
+          <div className="btn-row">
+            <button className="btn btn-emphasized" onClick={save}>Save Targets</button>
+            {msg && <span className={msg.startsWith('All') ? 'msg-err' : 'msg-ok'}>{msg}</span>}
+          </div>
+        </div>
+      </div>
+
+      <div className="panel">
+        <div className="panel-header">Current Targets</div>
+        <div className="panel-body">
+          <table>
+            <thead><tr><th>KPI</th><th>Target</th></tr></thead>
+            <tbody>
+              <tr><td>Store Visits</td><td><strong>{targets.visits}</strong></td></tr>
+              <tr><td>Distribution / Listings</td><td><strong>{targets.distribution}</strong></td></tr>
+              <tr><td>Shelf Facings</td><td><strong>{targets.shelfFacings}</strong></td></tr>
+              <tr><td>Sales Revenue</td><td><strong>${targets.sales.toLocaleString()}</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── App root ──────────────────────────────────────────────────────────────────
+function App() {
+  const [tab,     setTab]     = useState('dashboard');
+  const [targets, setTargets] = useState(INIT_TARGETS);
+  const [actual,  setActual]  = useState(INIT_ACTUAL);
+  const [log,     setLog]     = useState([]);
+  const [sapCtx,  setSapCtx]  = useState(getSapContext());
+
+  // Listen for SAP mashup postMessage context updates
+  useEffect(() => {
+    const handler = (event) => {
+      try {
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (data && (data.AccountName || data.accountName || data.RepName)) {
+          setSapCtx({
+            accountName: data.AccountName || data.accountName || '',
+            accountId:   data.AccountID   || data.accountId   || '',
+            repName:     data.RepName     || data.repName     || '',
+          });
+        }
+      } catch {}
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, []);
+
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard'    },
+    { id: 'log',       label: 'Log Activity' },
+    { id: 'targets',   label: 'Set Targets'  },
+  ];
+
+  return (
+    <>
+      <div className="tab-bar">
+        <div className="tab-bar-brand">Retail<span>Exec</span></div>
+        {tabs.map(t => (
+          <button key={t.id}
+            className={`tab-btn ${tab === t.id ? 'active' : ''}`}
+            onClick={() => setTab(t.id)}>
+            {t.label}
+          </button>
+        ))}
+        <div className="tab-spacer" />
+        <div className="tab-period">{nowMonth()}</div>
+      </div>
+
+      {tab === 'dashboard' && <Dashboard  targets={targets} actual={actual} log={log} sapCtx={sapCtx} />}
+      {tab === 'log'       && <LogActivity log={log} setLog={setLog} setActual={setActual} sapCtx={sapCtx} />}
+      {tab === 'targets'   && <SetTargets  targets={targets} setTargets={setTargets} />}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
